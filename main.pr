@@ -1,26 +1,2 @@
-fn strtest(x):
-    put(x,str);
-    return x;
-end;
-
-fn inttest(x):
-    return x;
-end;
-
-fn main():
-
-    st="OK";
-    num = 12;
-    n2 = inttest(num);
-    
-    strtest(st);
-    put(n2, int);
-
-end;
-
-fn inp():
-    word = input(">");
-    put(word, str);
-    return 0;
-end;
-
+x = 12;
+put(x,int);
