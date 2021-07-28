@@ -1,0 +1,9 @@
+fn test(x):
+    x = "OK";
+    return x;
+end;
+
+y = 12;
+word = test(y);
+
+put(word, str);

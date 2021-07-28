@@ -1,0 +1,17 @@
+fn sub():
+    ok = "OK";
+    return 0;
+end;
+
+sub();
+
+fn sub2(x,y):
+    put(x,str);
+    put(y,str);
+    return 0;
+end;
+
+a = "A";
+b = "B";
+c = "C";
+sub2(a,b);
