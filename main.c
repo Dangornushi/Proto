@@ -16,7 +16,8 @@ int main( int argc, char *argv[] ) {
     char command[16] = "python3 main.py ";
     char new_command[256];
     sprintf(new_command, "%s%s", command, argv[1]);
-    system(new_command);
+    /*command power ON/OFF*/
+    //system(new_command);
     char file_name[256];
     file = fopen(strtok(argv[1], "."), "rb");    // ファイルを読み込み用にオープン(開く)
     while ( (data=fgetc(file)) != EOF){

@@ -1,2 +1,11 @@
-x = 12;
-put(x,int);
+fn main(0):
+    int x = 12;
+    put(x,int);
+end;
+
+fn sub(0):
+    int x = 12;
+    put(x,int);
+end;
+
+main(0);
