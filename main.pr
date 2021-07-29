@@ -8,4 +8,6 @@ fn sub(0):
     put(x,int);
 end;
 
-main(0);
+int x = 12;
+
+main(x);
