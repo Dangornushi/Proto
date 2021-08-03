@@ -27,13 +27,19 @@ def p_paramlist(p):
         l = list(p[1])
         p[0] = l
     else:
-        p[0] = p[1], 
+        p[0] = p[1],
         if type(p[1][0]) == list:
             l = list(p[1])
         else:
             l = list([p[1]])
         l.append(p[3])
         p[0] = l
+
+def p_sent_char(p):
+    """
+    shiki : ID LKAKKO NUMBER LKOKKA
+    """
+    p[0] = ( "char", p[1], p[3] )
 
 def p_sent_shiki(p):
     """
@@ -64,6 +70,12 @@ def p_shiki_input(p):
     shiki : INPUT KAKKO shiki KOKKA 
     """
     p[0] = ("input", p[3])
+
+def p_shiki_call(p):
+    """
+    shiki : ID KAKKO paramlist KOKKA 
+    """
+    p[0] = ( "call", p[1], p[3])
 
 def p_compa(p):
     """
@@ -103,6 +115,12 @@ def p_sent_while(p):
     """
     p[0] = ( "WHILE", p[2], p[4] )
 
+def p_sent_return(p):
+    """
+    sent : RETURN shiki SEMI
+    """
+    p[0]= ( "return", p[2] )
+
 def p_sent_def(p):
     """
     sent :　ID EQOL shiki SEMI
@@ -119,13 +137,19 @@ def p_sent_put(p):
     """
     sent : PUT KAKKO shiki KOKKA SEMI
     """
-    p[0] = ( "put", p[3])
+    p[0] = ( "put", p[3] )
 
 def p_sent_call(p):
     """
     sent : ID KAKKO paramlist KOKKA SEMI
     """
-    p[0] = ("call", p[1], p[3])
+    p[0] = ( "call", p[1], p[3] )
+
+def p_sent_include(p):
+    """
+    sent : INCLUDE STR SEMI
+    """
+    p[0] = ("include", p[2]) 
 
 def p_error(p):
     print ('SyntaxErr : すみません、 %sに当てはまる文法作るのやめてもらっていいすか？' % p)
@@ -140,13 +164,17 @@ nowvall = ""
 ifbool = False
 
 datalis = []
+funclis = []
 
 valld = {}
 regd = {}
 funcd = {}
+argd = {}
 
 valld["0_start"] = {}
 regd["0_start"] = {}
+
+funclis.append("0_start")
 
 class Tasks:
     def __init__(self):
@@ -195,10 +223,11 @@ class Walker:
                     fout.write(item.encode())
     
     def steps( self, ast ):
-        global funcname, nowvall, valld, regd, funcd, reg_c, ifbool
+        global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
         tasks = Tasks()
 
         if ast[0] == "defunc":
+            argd[ast[1]] = ast[2]
             funcd[ast[1]] = ast[3]
         
         elif ast[0] == "IF":
@@ -218,6 +247,14 @@ class Walker:
             while ifbool:
                 self.steps(ast[2])
         
+        elif ast[0] == "return":
+            self.steps(ast[1])
+            try:
+                valld[funclis[funclis.index(funcname)-1]][nowvall] = valld[funcname][nowvall]
+                regd[funclis[funclis.index(funcname)-1]][nowvall] = regd[funcname][nowvall]
+            except:
+                    valld[funclis[funclis.index(funcname)-1]][nowvall] = nowvall
+
         elif ast[0] == "compa":
             self.steps(ast[1])
             beforvall = nowvall
@@ -291,30 +328,63 @@ class Walker:
         elif ast[0] == "put":
             self.steps(ast[1])
             try:
-                print(valld[funcname][nowvall])
+                print(valld[funcname][nowvall].replace("\\n", "\n"), end="")
             except:
-                print(nowvall)
+                print(nowvall.replace("\\n", "\n"), end="")
 
         elif ast[0] == "call":
             func2 = funcname
             funcname = ast[1]
+            funclis.append(funcname)
             valld[funcname] = {}
             regd[funcname] = {}
 
             if type(ast[2][0]) == str:
                 self.steps(ast[2])
-                valld[funcname][nowvall] = valld[func2][nowvall]
-                regd[funcname][nowvall] = regd[func2][nowvall]
+                beforevall = nowvall
+                self.steps(argd[funcname])
+                valld[funcname][nowvall] = valld[func2][beforevall]
+                regd[funcname][nowvall] = regd[func2][beforevall]
                 
             else:
+                count = 0
                 for item in ast[2]:
                     self.steps(item)
+                    beforevall = nowvall
+                    self.steps(argd[funcname][count])
+                    valld[funcname][nowvall] = valld[func2][beforevall]
+                    regd[funcname][nowvall] = regd[func2][beforevall]
+                    count += 1
             reg_c = 0
             self.steps(funcd[ast[1]])
 
 
+
         elif ast[0] == "shiki":
             nowvall = ast[1].replace("\"", "")
+
+        elif ast[0] == "char":
+            nowvall = valld[funcname][ast[1]][int(ast[2])]
+        
+        elif ast[0] == "include":
+            headfilename = ast[1].replace( "\"", "")
+            with open( headfilename, "r", encoding="utf_8" ) as headfile:
+                for item in headfile:
+                    item = item.replace("\n", "")
+                    if item.startswith("fn ") or item.startswith("if ")  or item.startswith("while "):
+                                infunc = True
+                                result = ""
+                                result += item
+                    elif item.startswith("end;"):
+                                infunc = False
+                                result += item
+                                if result != None:
+                                    walker.steps(parser.parse(result))
+                    elif infunc and item != "\n":
+                                result += item
+                    else:
+                                if item != None and item != "\n" and item != "":
+                                    walker.steps(parser.parse(item))
 
         elif type(ast[0]) == list or type(ast[0]) == tuple:
             for item in ast:

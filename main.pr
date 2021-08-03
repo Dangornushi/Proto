@@ -1,0 +1,9 @@
+@include "main.rh";
+
+fn sub(x,y):
+    return x;
+end;
+
+ok = "OK";
+fest = 12;
+puts(ok);

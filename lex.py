@@ -34,6 +34,7 @@ tokens = (
     "INPUT",
     "OR",
     "AND",
+    "INCLUDE",
 )
 
 t_CONMA = r","
@@ -59,11 +60,11 @@ t_OR = r"\|\|"
 t_AND = "&&"
 
 def t_STR (t):
-    r"[\"'][_\<\>\.,\*+-/\!\?a-zA-Z0-9\"' ]*"
+    r"[\"'][_\<\>\.,\*+-/\!\?a-zA-Z0-9\"'\\ ]*"
     return t
 
 def t_ID (t):
-    r"[a-zA-Z_][a-zA-Z0-9_|\&]*"
+    r"[@a-zA-Z_][a-zA-Z0-9_|\&]*"
     if t.value == "int":
         t.type = "TYPE"
     elif t.value == "str":#t.value == "float" or 
@@ -94,6 +95,8 @@ def t_ID (t):
         t.type = "AND"
     elif t.value == "||" or t.value == "or":
         t.type = "OR"
+    elif t.value == "@include":
+        t.type = "INCLUDE"
     else:
         t.type == "ID"
     return t
