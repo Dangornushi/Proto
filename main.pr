@@ -1,9 +1,7 @@
 @include "main.rh";
+@include "random.rh";
 
-fn sub(x,y):
-    return x;
-end;
 
 ok = "OK";
-fest = 12;
-puts(ok);
+x = 0;
+print(random(10));

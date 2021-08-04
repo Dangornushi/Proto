@@ -3,7 +3,7 @@ import sys, struct
 import ply.yacc as yacc
 from lex import tokens
 from helps import Option_Commandlines
-
+from random import randint, random
 
 def p_sents(p):
     """
@@ -37,7 +37,7 @@ def p_paramlist(p):
 
 def p_sent_char(p):
     """
-    shiki : ID LKAKKO NUMBER LKOKKA
+    shiki : ID LKAKKO shiki LKOKKA
     """
     p[0] = ( "char", p[1], p[3] )
 
@@ -70,6 +70,12 @@ def p_shiki_input(p):
     shiki : INPUT KAKKO shiki KOKKA 
     """
     p[0] = ("input", p[3])
+
+def p_shiki_rdn(p):
+    """
+    shiki : RDM KAKKO paramlist KOKKA
+    """
+    p[0] = ("random", p[3])
 
 def p_shiki_call(p):
     """
@@ -324,6 +330,24 @@ class Walker:
             self.steps(ast[1])
             nowvall = input(nowvall)
 
+        elif ast[0] == "random":
+            beforevall = nowvall
+            self.steps(ast[1][0])
+            se1 = nowvall
+            self.steps(ast[1][1])
+            se2 = nowvall
+
+            try:
+                se1 = int(valld[funcname][se1])
+            except:
+                se1 = int(se1)
+            
+            try:
+                se2 = int(valld[funcname][se2])
+            except:
+                se2 = int(se2)
+            
+            valld[funcname][nowvall] = random.randint( se1, se2)
 
         elif ast[0] == "put":
             self.steps(ast[1])
@@ -333,18 +357,21 @@ class Walker:
                 print(nowvall.replace("\\n", "\n"), end="")
 
         elif ast[0] == "call":
-            func2 = funcname
-            funcname = ast[1]
-            funclis.append(funcname)
-            valld[funcname] = {}
-            regd[funcname] = {}
+            func2 = ast[1]
+            funclis.append(func2)
+            valld[func2] = {}
+            regd[func2] = {}
 
             if type(ast[2][0]) == str:
                 self.steps(ast[2])
                 beforevall = nowvall
-                self.steps(argd[funcname])
-                valld[funcname][nowvall] = valld[func2][beforevall]
-                regd[funcname][nowvall] = regd[func2][beforevall]
+                self.steps(argd[func2])
+                try:
+                    valld[func2][nowvall] = valld[funcname][beforevall]
+                    regd[func2][nowvall] = regd[funcname][beforevall]
+                except:
+                    valld[func2][nowvall] = beforevall
+                    regd[func2][nowvall] = beforevall
                 
             else:
                 count = 0
@@ -352,23 +379,30 @@ class Walker:
                     self.steps(item)
                     beforevall = nowvall
                     self.steps(argd[funcname][count])
-                    valld[funcname][nowvall] = valld[func2][beforevall]
-                    regd[funcname][nowvall] = regd[func2][beforevall]
+                    try:
+                        valld[func2][nowvall] = valld[funcname][beforevall]
+                        regd[func2][nowvall] = regd[funcname][beforevall]
+                    except:
+                        valld[func2][nowvall] = beforevall
+                        regd[func2][nowvall] = beforevall
                     count += 1
             reg_c = 0
+            funcname = func2
             self.steps(funcd[ast[1]])
-
-
 
         elif ast[0] == "shiki":
             nowvall = ast[1].replace("\"", "")
 
         elif ast[0] == "char":
-            nowvall = valld[funcname][ast[1]][int(ast[2])]
-        
+            self.steps(ast[2])
+            try:
+                valld[funcname][ast[1]] = valld[funcname][ast[1]][int(valld[funcname][nowvall])]
+            except:
+                valld[funcname][ast[1]] = valld[funcname][ast[1]][int(nowvall)]
+            nowvall = ast[1]
         elif ast[0] == "include":
             headfilename = ast[1].replace( "\"", "")
-            with open( headfilename, "r", encoding="utf_8" ) as headfile:
+            with open( "include/"+headfilename, "r", encoding="utf_8" ) as headfile:
                 for item in headfile:
                     item = item.replace("\n", "")
                     if item.startswith("fn ") or item.startswith("if ")  or item.startswith("while "):

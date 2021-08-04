@@ -1,0 +1,10 @@
+fn random_seed_include(seed1, seed2):
+    print(seed1);
+    randnum = rdm(seed1, seed2);
+    return randnum;
+end;
+
+fn random(seed):
+    x = 0;
+    return random_seed_include(x, seed);
+end;

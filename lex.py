@@ -35,6 +35,7 @@ tokens = (
     "OR",
     "AND",
     "INCLUDE",
+    "RDM",
 )
 
 t_CONMA = r","
@@ -64,7 +65,7 @@ def t_STR (t):
     return t
 
 def t_ID (t):
-    r"[@a-zA-Z_][a-zA-Z0-9_|\&]*"
+    r"[@a-zA-Z\_][a-zA-Z0-9_|\&]*"
     if t.value == "int":
         t.type = "TYPE"
     elif t.value == "str":#t.value == "float" or 
@@ -97,6 +98,8 @@ def t_ID (t):
         t.type = "OR"
     elif t.value == "@include":
         t.type = "INCLUDE"
+    elif t.value == "rdm":#rdm(seed1, seed2);
+        t.type = "RDM"
     else:
         t.type == "ID"
     return t
