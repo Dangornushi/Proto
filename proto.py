@@ -71,6 +71,12 @@ def p_shiki_input(p):
     """
     p[0] = ("input", p[3])
 
+def p_shiki_len(p):
+    """
+    shiki : shiki PIRIOD LEN
+    """
+    p[0] = ("len", p[1])
+
 def p_shiki_rdn(p):
     """
     shiki : RDM KAKKO paramlist KOKKA
@@ -204,15 +210,15 @@ class Walker:
 
         try:
             try:
-                if int(valld[funcname][l]) > int(valld[funcname][r]):
+                if int(valld[funcname][l]["vall"]) > int(valld[funcname][r]["vall"]):
                     return True
             
             except:
                 try:
-                    if int(valld[funcname][l]) > int(r):
+                    if int(valld[funcname][l]["vall"]) > int(r):
                         return True
                 except:
-                    if int(l) > int(valld[funcname][r]):
+                    if int(l) > int(valld[funcname][r]["vall"]):
                         return True
         except:
                 try:
@@ -230,12 +236,13 @@ class Walker:
     
     def mov_in_mov(self, a, b):
         global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
-        valld[funclis[funclis.index(funcname)-1]][a] = valld[funcname][b]
-        regd[funclis[funclis.index(funcname)-1]][a] = regd[funcname][b]
+        valld[funclis[funclis.index(funcname)-1]][a] = {"name":nowvall,"vall":nowvall,"len":len(nowvall)}
+        valld[funclis[funclis.index(funcname)-1]][a]["vall"] = valld[funcname][b]["vall"]
+        regd[funclis[funclis.index(funcname)-1]][a]["vall"] = regd[funcname][b]["vall"]
         try:
-            self.mov_in_mov(a, valld[funcname][b])
+            self.mov_in_mov(a, valld[funcname][b]["vall"])
         except:
-            return valld[funcname][b]
+            return valld[funcname][b]["vall"]
     
     def steps( self, ast ):
         global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
@@ -261,13 +268,14 @@ class Walker:
             self.steps(ast[1])
             while ifbool:
                 self.steps(ast[2])
+                self.steps(ast[1])
         
         elif ast[0] == "return":
             self.steps(ast[1])
             try:
                 nowvall = self.mov_in_mov(nowvall, nowvall)
             except:
-                valld[funclis[funclis.index(funcname)-1]][nowvall] = nowvall
+                valld[funclis[funclis.index(funcname)-1]][nowvall]["vall"] = nowvall
             
             funcname = funclis[funclis.index(funcname)-1]
 
@@ -290,7 +298,7 @@ class Walker:
             nowvall = ast[1]
             self.steps(ast[2])
 
-            valld[funcname][ast[1]] = nowvall   #変数名と保存する値を格納
+            valld[funcname][ast[1]] = {"name":ast[1],"vall":nowvall,"len":len(nowvall)}   #変数名と保存する値を格納
             regd[funcname][ast[1]] = reg_c  #変数名とレジスタの名前を格納
 
             
@@ -299,47 +307,67 @@ class Walker:
         elif ast[0] == "add":
             self.steps(ast[1])
             if type( ast[3] )  == str:
-                valld[funcname][nowvall] = int(valld[funcname][nowvall]) + 1
+                valld[funcname][nowvall]["vall"] = int(valld[funcname][nowvall]["vall"]) + 1
             else :
                 beforvall = nowvall
                 self.steps(ast[3])
-                valld[funcname][beforvall] = int(valld[funcname][beforvall]) + int(valld[funcname][nowvall])
-                nowvall = int(valld[funcname][beforvall])
+                try:
+                    valld[funcname][beforvall]["vall"] = int(valld[funcname][beforvall]["vall"]) + int(valld[funcname][nowvall]["vall"])
+                    nowvall = int(valld[funcname][beforvall]["vall"])
+                
+                except ValueError:
+                    valld[funcname][beforvall]["vall"] = valld[funcname][beforvall]["vall"] + valld[funcname][nowvall]["vall"]
+                    nowvall = valld[funcname][beforvall]["vall"]
 
         elif ast[0] == "sub":
             self.steps(ast[1])
             if type( ast[3] )  == str:
-                valld[funcname][nowvall] = int(valld[funcname][nowvall]) - 1
+                valld[funcname][nowvall]["vall"] = int(valld[funcname][nowvall]["vall"]) - 1
             else :
                 beforvall = nowvall
                 self.steps(ast[3])
-                valld[funcname][beforvall] = int(valld[funcname][beforvall]) - int(valld[funcname][nowvall])
-                nowvall = int(valld[funcname][beforvall])
-        
+                try:
+                    valld[funcname][beforvall["vall"]] = int(valld[funcname][beforvall]["vall"]) - int(valld[funcname][nowvall]["vall"])
+                except:
+                    try:
+                        valld[funcname][beforvall]["vall"] = int(beforvall) - int(nowvall)
+                        nowvall = int(valld[funcname][beforvall]["vall"])
+                    except ValueError:                        
+                        try:
+                            valld[funcname][beforvall]["vall"] = valld[funcname][beforvall]["vall"].replace(valld[funcname][nowvall]["vall"], "")
+                            nowvall = valld[funcname][beforvall]["vall"]
+                        except:
+                            valld[funcname][beforvall]["vall"] = valld[funcname][beforvall]["vall"].replace(nowvall, "")
+                            nowvall = valld[funcname][beforvall]["vall"]
+
         elif ast[0] == "div":
             self.steps(ast[1])
             if type( ast[3] )  == str:
-                valld[funcname][nowvall] = int(valld[funcname][nowvall]) * 1
+                valld[funcname][nowvall]["vall"] = int(valld[funcname][nowvall]["vall"]) * 1
             else :
                 beforvall = nowvall
                 self.steps(ast[3])
-                valld[funcname][beforvall] = int(valld[funcname][beforvall]) * int(valld[funcname][nowvall])
-                nowvall = int(valld[funcname][beforvall])
+                valld[funcname][beforvall]["vall"] = int(valld[funcname][beforvall]["vall"]) * int(valld[funcname][nowvall]["vall"])
+                nowvall = int(valld[funcname][beforvall]["vall"])
         
         elif ast[0] == "mul":
             self.steps(ast[1])
             if type( ast[3] )  == str:
-                valld[funcname][nowvall] = int(valld[funcname][nowvall]) / 1
+                valld[funcname][nowvall]["vall"] = int(valld[funcname][nowvall]["vall"]) / 1
             else :
                 beforvall = nowvall
                 self.steps(ast[3])
-                valld[funcname][beforvall] = int(valld[funcname][beforvall]) / int(valld[funcname][nowvall])
-                nowvall = int(valld[funcname][beforvall])
+                valld[funcname][beforvall]["vall"] = int(valld[funcname][beforvall]["vall"]) / int(valld[funcname][nowvall]["vall"])
+                nowvall = int(valld[funcname][beforvall]["vall"])
 
         elif ast[0] == "input":
             beforvall= nowvall
             self.steps(ast[1])
             nowvall = input(nowvall)
+        
+        elif ast[0] == "len":
+            self.steps(ast[1])
+            nowvall = valld[funcname][nowvall]["len"]
 
         elif ast[0] == "random":
             beforevall = nowvall
@@ -349,12 +377,12 @@ class Walker:
             se2 = nowvall
 
             try:
-                se1 = int(valld[funcname][se1])
+                se1 = int(valld[funcname][se1]["vall"])
             except:
                 se1 = int(se1)
             
             try:
-                se2 = int(valld[funcname][se2])
+                se2 = int(valld[funcname][se2]["vall"])
             except:
                 se2 = int(se2)
             
@@ -364,10 +392,10 @@ class Walker:
         elif ast[0] == "put":
             self.steps(ast[1])
             try:
-                print(valld[funcname][nowvall], end="")
+                print(valld[funcname][nowvall]["vall"], end="")
             except:
                 try:
-                    print( valld[funcname][nowvall].replace("\\n", "\n"), end="")
+                    print( valld[funcname][nowvall]["vall"].replace("\\n", "\n"), end="")
                 except:
                     print(nowvall.replace("\\n", "\n"), end="")
 
@@ -381,11 +409,12 @@ class Walker:
                 self.steps(ast[2])
                 beforevall = nowvall
                 self.steps(argd[func2])
+                valld[func2][nowvall] = {"name":nowvall,"vall":nowvall,"len":len(nowvall)}
                 try:
-                    valld[func2][nowvall] = valld[funcname][beforevall]
+                    valld[func2][nowvall]["vall"] = valld[funcname][beforevall]["vall"]
                     regd[func2][nowvall] = regd[funcname][beforevall]
                 except:
-                    valld[func2][nowvall] = beforevall
+                    valld[func2][nowvall]["vall"] = beforevall
                     regd[func2][nowvall] = beforevall
                 
             else:
@@ -395,10 +424,10 @@ class Walker:
                     beforevall = nowvall
                     self.steps(argd[func2][count])
                     try:
-                        valld[func2][nowvall] = valld[funcname][beforevall]
+                        valld[func2][nowvall]["vall"] = valld[funcname][beforevall]["vall"]
                         regd[func2][nowvall] = regd[funcname][beforevall]
                     except:
-                        valld[func2][nowvall] = beforevall
+                        valld[func2][nowvall]["vall"] = beforevall
                         regd[func2][nowvall] = beforevall
                     count += 1
             reg_c = 0
@@ -411,10 +440,10 @@ class Walker:
         elif ast[0] == "char":
             self.steps(ast[2])
             try:
-                nowvall = valld[funcname][ast[1]][int(valld[funcname][nowvall])]
+                nowvall = valld[funcname][ast[1]]["vall"][int(valld[funcname][nowvall]["vall"])]
             except:
                 try:
-                    nowvall = valld[funcname][ast[1]][int(nowvall)]
+                    nowvall = valld[funcname][ast[1]]["vall"][int(nowvall)]
                 except:
                     print("IndexErr : 配列のインデックスが多すぎます,異常終了します(ErrCode 1)")
                     sys.exit()

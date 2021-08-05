@@ -36,6 +36,7 @@ tokens = (
     "AND",
     "INCLUDE",
     "RDM",
+    "LEN",
 )
 
 t_CONMA = r","
@@ -100,6 +101,8 @@ def t_ID (t):
         t.type = "INCLUDE"
     elif t.value == "rdm":#rdm(seed1, seed2);
         t.type = "RDM"
+    elif t.value == "len":
+        t.type = "LEN"
     else:
         t.type == "ID"
     return t

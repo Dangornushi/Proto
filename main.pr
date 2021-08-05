@@ -1,12 +1,9 @@
-@include "main.rh";
+@include "main.ph";
 
-ok = "OK";
-dango = "dangomushi";
-x = 0;
-one = 1;
+x = "dangomushi";
 count = 0;
 
-while x < 10:
-    puts( dango[count] );
+while x.len > count:
+    print(x[count]);
     count++;
 end;
