@@ -3,7 +3,7 @@ import sys, struct
 import ply.yacc as yacc
 from lex import tokens
 from helps import Option_Commandlines
-from random import randint, random
+import random 
 
 def p_sents(p):
     """
@@ -228,6 +228,15 @@ class Walker:
                 for item in x:
                     fout.write(item.encode())
     
+    def mov_in_mov(self, a, b):
+        global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
+        valld[funclis[funclis.index(funcname)-1]][a] = valld[funcname][b]
+        regd[funclis[funclis.index(funcname)-1]][a] = regd[funcname][b]
+        try:
+            self.mov_in_mov(a, valld[funcname][b])
+        except:
+            return valld[funcname][b]
+    
     def steps( self, ast ):
         global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
         tasks = Tasks()
@@ -256,10 +265,11 @@ class Walker:
         elif ast[0] == "return":
             self.steps(ast[1])
             try:
-                valld[funclis[funclis.index(funcname)-1]][nowvall] = valld[funcname][nowvall]
-                regd[funclis[funclis.index(funcname)-1]][nowvall] = regd[funcname][nowvall]
+                nowvall = self.mov_in_mov(nowvall, nowvall)
             except:
-                    valld[funclis[funclis.index(funcname)-1]][nowvall] = nowvall
+                valld[funclis[funclis.index(funcname)-1]][nowvall] = nowvall
+            
+            funcname = funclis[funclis.index(funcname)-1]
 
         elif ast[0] == "compa":
             self.steps(ast[1])
@@ -277,6 +287,7 @@ class Walker:
                 ifbool = False
                 
         elif ast[0] == "mov":
+            nowvall = ast[1]
             self.steps(ast[2])
 
             valld[funcname][ast[1]] = nowvall   #変数名と保存する値を格納
@@ -347,14 +358,18 @@ class Walker:
             except:
                 se2 = int(se2)
             
-            valld[funcname][nowvall] = random.randint( se1, se2)
+            nowvall = beforevall
+            nowvall = random.randint( se1, se2)
 
         elif ast[0] == "put":
             self.steps(ast[1])
             try:
-                print(valld[funcname][nowvall].replace("\\n", "\n"), end="")
+                print(valld[funcname][nowvall], end="")
             except:
-                print(nowvall.replace("\\n", "\n"), end="")
+                try:
+                    print( valld[funcname][nowvall].replace("\\n", "\n"), end="")
+                except:
+                    print(nowvall.replace("\\n", "\n"), end="")
 
         elif ast[0] == "call":
             func2 = ast[1]
@@ -378,7 +393,7 @@ class Walker:
                 for item in ast[2]:
                     self.steps(item)
                     beforevall = nowvall
-                    self.steps(argd[funcname][count])
+                    self.steps(argd[func2][count])
                     try:
                         valld[func2][nowvall] = valld[funcname][beforevall]
                         regd[func2][nowvall] = regd[funcname][beforevall]
@@ -396,10 +411,14 @@ class Walker:
         elif ast[0] == "char":
             self.steps(ast[2])
             try:
-                valld[funcname][ast[1]] = valld[funcname][ast[1]][int(valld[funcname][nowvall])]
+                nowvall = valld[funcname][ast[1]][int(valld[funcname][nowvall])]
             except:
-                valld[funcname][ast[1]] = valld[funcname][ast[1]][int(nowvall)]
-            nowvall = ast[1]
+                try:
+                    nowvall = valld[funcname][ast[1]][int(nowvall)]
+                except:
+                    print("IndexErr : 配列のインデックスが多すぎます,異常終了します(ErrCode 1)")
+                    sys.exit()
+
         elif ast[0] == "include":
             headfilename = ast[1].replace( "\"", "")
             with open( "include/"+headfilename, "r", encoding="utf_8" ) as headfile:

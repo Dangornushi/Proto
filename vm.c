@@ -15,7 +15,7 @@ int main( int argc, char *argv[] ) {
     char datas[256][256] = {};
     char command[16] = "python3 main.py ";
     char new_command[256];
-    sprintf(new_command, "%s%s", command, argv[1]);
+    strswxf(new_command, "%s%s", command, argv[1]);
     /*command power ON/OFF*/
     //system(new_command);
     char file_name[256];

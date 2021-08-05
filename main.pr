@@ -1,7 +1,12 @@
 @include "main.rh";
-@include "random.rh";
-
 
 ok = "OK";
+dango = "dangomushi";
 x = 0;
-print(random(10));
+one = 1;
+count = 0;
+
+while x < 10:
+    puts( dango[count] );
+    count++;
+end;
