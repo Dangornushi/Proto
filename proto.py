@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from abc import ABCMeta
 import sys, struct
 import ply.yacc as yacc
 from lex import tokens
@@ -236,13 +237,15 @@ class Walker:
     
     def mov_in_mov(self, a, b):
         global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
-        valld[funclis[funclis.index(funcname)-1]][a] = {"name":nowvall,"vall":nowvall,"len":len(nowvall)}
-        valld[funclis[funclis.index(funcname)-1]][a]["vall"] = valld[funcname][b]["vall"]
-        regd[funclis[funclis.index(funcname)-1]][a]["vall"] = regd[funcname][b]["vall"]
+        
+        valld[funclis[funclis.index(funcname)-1]][a] = {"name":a,"vall":nowvall,"len":len(str(nowvall))}
         try:
             self.mov_in_mov(a, valld[funcname][b]["vall"])
         except:
-            return valld[funcname][b]["vall"]
+            try:
+                return valld[funcname][b]["vall"]
+            except:
+                return nowvall;
     
     def steps( self, ast ):
         global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
@@ -276,7 +279,6 @@ class Walker:
                 nowvall = self.mov_in_mov(nowvall, nowvall)
             except:
                 valld[funclis[funclis.index(funcname)-1]][nowvall]["vall"] = nowvall
-            
             funcname = funclis[funclis.index(funcname)-1]
 
         elif ast[0] == "compa":
@@ -298,10 +300,8 @@ class Walker:
             nowvall = ast[1]
             self.steps(ast[2])
 
-            valld[funcname][ast[1]] = {"name":ast[1],"vall":nowvall,"len":len(nowvall)}   #変数名と保存する値を格納
-            regd[funcname][ast[1]] = reg_c  #変数名とレジスタの名前を格納
-
-            
+            valld[funcname][ast[1]] = {"name":ast[1],"vall":nowvall,"len":len(str(nowvall))}   #変数名と保存する値を格納
+            self.mov_in_mov(ast[1], nowvall )
             reg_c+=1    #レジスタカウンタ+1
         
         elif ast[0] == "add":
@@ -409,13 +409,16 @@ class Walker:
                 self.steps(ast[2])
                 beforevall = nowvall
                 self.steps(argd[func2])
+                #len関数の中で
                 valld[func2][nowvall] = {"name":nowvall,"vall":nowvall,"len":len(nowvall)}
+
                 try:
-                    valld[func2][nowvall]["vall"] = valld[funcname][beforevall]["vall"]
+                    valld[func2][nowvall] = valld[funcname][beforevall]
                     regd[func2][nowvall] = regd[funcname][beforevall]
                 except:
                     valld[func2][nowvall]["vall"] = beforevall
                     regd[func2][nowvall] = beforevall
+                
                 
             else:
                 count = 0
@@ -424,8 +427,7 @@ class Walker:
                     beforevall = nowvall
                     self.steps(argd[func2][count])
                     try:
-                        valld[func2][nowvall]["vall"] = valld[funcname][beforevall]["vall"]
-                        regd[func2][nowvall] = regd[funcname][beforevall]
+                        valld[func2][nowvall] = valld[funcname][beforevall]
                     except:
                         valld[func2][nowvall]["vall"] = beforevall
                         regd[func2][nowvall] = beforevall

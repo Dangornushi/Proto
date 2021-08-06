@@ -14,3 +14,7 @@ fn puts(puts_str):
     put("\n");
     return True;
 end;
+
+fn len( len_word ) :
+    return len_word.LEN;
+end;

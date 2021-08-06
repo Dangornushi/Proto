@@ -101,7 +101,7 @@ def t_ID (t):
         t.type = "INCLUDE"
     elif t.value == "rdm":#rdm(seed1, seed2);
         t.type = "RDM"
-    elif t.value == "len":
+    elif t.value == "LEN":
         t.type = "LEN"
     else:
         t.type == "ID"
