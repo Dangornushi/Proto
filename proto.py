@@ -274,6 +274,7 @@ class Walker:
                 self.steps(ast[1])
         
         elif ast[0] == "return":
+            funclis.append( funclis[funclis.index(funcname)-1] )
             self.steps(ast[1])
             try:
                 nowvall = self.mov_in_mov(nowvall, nowvall)
@@ -405,6 +406,7 @@ class Walker:
             valld[func2] = {}
             regd[func2] = {}
 
+
             if type(ast[2][0]) == str:
                 self.steps(ast[2])
                 beforevall = nowvall
@@ -414,7 +416,6 @@ class Walker:
 
                 try:
                     valld[func2][nowvall] = valld[funcname][beforevall]
-                    regd[func2][nowvall] = regd[funcname][beforevall]
                 except:
                     valld[func2][nowvall]["vall"] = beforevall
                     regd[func2][nowvall] = beforevall
@@ -447,6 +448,7 @@ class Walker:
                 try:
                     nowvall = valld[funcname][ast[1]]["vall"][int(nowvall)]
                 except:
+#                    print(valld[funcname])
                     print("IndexErr : 配列のインデックスが多すぎます,異常終了します(ErrCode 1)")
                     sys.exit()
 

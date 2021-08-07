@@ -3,4 +3,7 @@
 x = "dangomushi";
 count = 0;
 
-print(len(x));
+while len(x) > count:
+    print(x[count]);
+    count++;
+end;
