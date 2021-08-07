@@ -4,6 +4,7 @@ x = "dangomushi";
 count = 0;
 
 while len(x) > count:
-    print(x[count]);
+    put(x[count]);
     count++;
 end;
+put("\n");

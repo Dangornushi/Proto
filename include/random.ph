@@ -7,4 +7,4 @@ fn random(seed):
     x = 0;
     r = random_seed_include(x, seed);
     return r; 
-end;545
+end;

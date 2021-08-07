@@ -406,7 +406,6 @@ class Walker:
             valld[func2] = {}
             regd[func2] = {}
 
-
             if type(ast[2][0]) == str:
                 self.steps(ast[2])
                 beforevall = nowvall
@@ -448,7 +447,6 @@ class Walker:
                 try:
                     nowvall = valld[funcname][ast[1]]["vall"][int(nowvall)]
                 except:
-#                    print(valld[funcname])
                     print("IndexErr : 配列のインデックスが多すぎます,異常終了します(ErrCode 1)")
                     sys.exit()
 
