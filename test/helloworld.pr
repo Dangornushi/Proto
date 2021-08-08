@@ -1,0 +1,9 @@
+@include "main.ph";
+
+fn True():
+    return True;
+end;
+
+if True():
+    print(clear);
+end;

@@ -90,13 +90,31 @@ def p_shiki_call(p):
     """
     p[0] = ( "call", p[1], p[3])
 
+def p_shiki_call_void(p):
+    """
+    shiki : ID KAKKO KOKKA
+    """
+    p[0] = ( "call", p[1], "0")
+
 def p_compa(p):
     """
     compa : shiki EQOLS shiki
           | shiki DAINARI shiki
           | shiki SYOUNARI shiki
     """
-    p[0] = ("compa", p[1], p[2], p[3] ) 
+    p[0] = ("compa", p[1], p[2], p[3] )
+
+def p_compa_call(p):
+    """
+    compa : ID KAKKO paramlist KOKKA
+    """
+    p[0] = ("compacall", p[1], p[3])
+
+def p_compa_call(p):
+    """
+    compa : ID KAKKO KOKKA
+    """
+    p[0] = ("compacall", p[1], "0")
 
 def p_shiki_plusplus(p):
     """
@@ -109,6 +127,12 @@ def p_sent_defunc(p):
     sent : FN ID KAKKO paramlist KOKKA COLON sents END SEMI
     """
     p[0] = ("defunc", p[2], p[4], p[7])
+
+def p_sent_defunc_void(p):
+    """
+    sent : FN ID KAKKO KOKKA COLON sents END SEMI
+    """
+    p[0] = ("defunc", p[2], "0", p[6])
 
 def p_sent_if(p):
     """
@@ -157,6 +181,12 @@ def p_sent_call(p):
     sent : ID KAKKO paramlist KOKKA SEMI
     """
     p[0] = ( "call", p[1], p[3] )
+
+def p_sent_call_void(p):
+    """
+    sent : ID KAKKO KOKKA SEMI
+    """
+    p[0] = ( "call", p[1], "0" )
 
 def p_sent_include(p):
     """
@@ -237,16 +267,12 @@ class Walker:
     
     def mov_in_mov(self, a, b):
         global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
-        
-        valld[funclis[funclis.index(funcname)-1]][a] = {"name":a,"vall":nowvall,"len":len(str(nowvall))}
         try:
-            self.mov_in_mov(a, valld[funcname][b]["vall"])
+            self.mov_in_mov(a, valld[funcname][valld[funcname][a]["vall"]]["vall"] )
         except:
-            try:
-                return valld[funcname][b]["vall"]
-            except:
-                return nowvall;
-    
+            valld[funcname][a] = {"namee":a, "vall":b, "len":len(b)}
+            return 0
+        
     def steps( self, ast ):
         global funcname, nowvall, valld, regd, funcd, reg_c, ifbool, funclis
         tasks = Tasks()
@@ -277,9 +303,13 @@ class Walker:
             funclis.append( funclis[funclis.index(funcname)-1] )
             self.steps(ast[1])
             try:
-                nowvall = self.mov_in_mov(nowvall, nowvall)
+                valld[funclis[funclis.index(funcname)-1]][funcname] = {"name":funcname, "vall":nowvall, "len":len(nowvall)}
+                valld[funclis[funclis.index(funcname)-1]][funcname]["vall"] = nowvall
+                
             except:
-                valld[funclis[funclis.index(funcname)-1]][nowvall]["vall"] = nowvall
+                valld[funclis[funclis.index(funcname)-1]][funcname]["vall"] = nowvall
+            
+            nowvall = funcname
             funcname = funclis[funclis.index(funcname)-1]
 
         elif ast[0] == "compa":
@@ -296,15 +326,22 @@ class Walker:
             
             else:
                 ifbool = False
+            
+        elif ast[0] == "compacall":
+            l = ("call", ast[1:])
+            self.steps( ("call",l[1][0], l[1][1]) )
+            if valld[funcname][l[1][0]]["vall"] == "True":
+                ifbool = True
                 
         elif ast[0] == "mov":
             nowvall = ast[1]
             self.steps(ast[2])
-
+            
             valld[funcname][ast[1]] = {"name":ast[1],"vall":nowvall,"len":len(str(nowvall))}   #変数名と保存する値を格納
             self.mov_in_mov(ast[1], nowvall )
+            
             reg_c+=1    #レジスタカウンタ+1
-        
+            
         elif ast[0] == "add":
             self.steps(ast[1])
             if type( ast[3] )  == str:
