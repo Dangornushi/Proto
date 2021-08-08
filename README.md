@@ -165,3 +165,21 @@ end;
 
 指定の条件の場合endまでの処理を繰り返し行います。
 こちらも、比較文によって制御されます。
+
+## 実行
+
+実行させたいファイルをprotoの後につけて実行するだけです。
+開発環境ではpython3.8.2でテストしています。
+main.prを実行する例です。
+
+```
+(windows)
+$ python proto.py main.pr
+or
+$ proto main.pr
+
+(mac/Linux)
+$ python3 proto.py main.pr
+or
+$ ./proto main.pr
+```
